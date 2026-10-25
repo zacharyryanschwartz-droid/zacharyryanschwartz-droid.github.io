@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#7fc8f0">
+<title>Market Plot — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=mvn6q3zw">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="logo" id="logo"></div>
+    <div class="ribbon"><span class="coin-ico"></span><b id="coins">0</b>¢</div>
+    <div class="hbtns"><button class="gear book" id="btn-collection" aria-label="Collection &amp; stats" data-act="collection">📖</button>
+    <button class="gear" id="btn-settings" aria-label="Settings">⚙</button></div>
+  </header>
+
+  <main id="screens">
+    <section class="screen active" id="screen-lab" data-hook="workshop"></section><!-- the Invention Workshop (home); id kept for old tests -->
+    <section class="screen" id="screen-farm"></section>
+    <section class="screen" id="screen-kitchen"></section>
+    <section class="screen" id="screen-market"></section>
+    <section class="screen" id="screen-bazaar" data-hook="bazaar"></section>
+    <section class="screen" id="screen-town" data-hook="town-board"></section>
+  </main>
+
+  <!-- MONETIZATION HOOK: banner ad slot. Ads.showBanner()/hideBanner() toggles this. -->
+  <div id="ad-banner" class="ad-banner" data-hook="banner-ad"><span>Ad</span><small>320×50 banner placeholder</small></div>
+
+  <nav id="tabbar">
+    <button data-tab="lab" class="on home"><i>💡</i>Workshop</button>
+    <button data-tab="farm"><i>🌱</i>Farm</button>
+    <button data-tab="kitchen"><i>🍯</i>Kitchen</button>
+    <button data-tab="market"><i>🧺</i>Market</button>
+    <button data-tab="bazaar"><i>🎪</i>Bazaar</button>
+    <button data-tab="town"><i>📋</i>Town</button>
+  </nav>
+
+  <div id="book" class="rbook" data-hook="recipe-book-overlay"></div>
+  <div id="sheet-backdrop" class="backdrop"></div>
+  <div id="sheet" class="sheet"></div>
+  <!-- MONETIZATION HOOK: interstitial overlay. Ads.showInterstitial() -->
+  <div id="interstitial" class="interstitial" data-hook="interstitial-ad"></div>
+  <div id="toast" class="toast"></div>
+</div>
+<script>window.MP_GATE={"salt":"mp-bfbda6eb2f2b97eb9b1b3573","iterations":150000,"hash":"91228e1ae9ac9aadf1a19322189f6b668d5ef659e0721c25f5fed4ef0c3817ce"};window.MP_SCRIPTS=["js/ai-images.js?v=mvn6q3zw","js/data.js?v=mvn6q3zw","js/art.js?v=mvn6q3zw","js/stages.js?v=mvn6q3zw","js/hooks.js?v=mvn6q3zw","js/game.js?v=mvn6q3zw","js/bazaar-core.js?v=mvn6q3zw","js/think.js?v=mvn6q3zw","js/ui.js?v=mvn6q3zw","js/directory-core.js?v=mvn6q3zw","js/directory.js?v=mvn6q3zw","js/best.js?v=mvn6q3zw","js/think-ui.js?v=mvn6q3zw"];</script>
+<script src="js/gate.js?v=mvn6q3zw"></script>
+</body>
+</html>
