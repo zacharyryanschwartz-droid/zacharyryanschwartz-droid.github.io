@@ -49,7 +49,7 @@ const TOOLS = {
 };
 /* ===== CREATION SLOTS (per location) =====
    Every location has the 4 basic crops + 2 basic tools, and room for at most SLOTS invented things of each kind
-   (AI-made, Free Mix Lab, Bazaar or Directory items all count). Full = delete one first; nothing is spent. */
+   (AI-made, Free Mix Lab or Bazaar items all count). Full = delete one first; nothing is spent. */
 const SLOTS = { crop: 4, tool: 4, recipe: 10 };
 
 /* Marketing tools (global, not gated). traffic = extra customers/sec, appeal = x perceived value */
@@ -370,16 +370,14 @@ const BAZAAR_SAMPLES = [ // clearly labelled sample players, seeded into a fresh
     payload: { recipes: ['pie', 'cordial'], art: 'oven', hue: 18, speedMult: 0.8, bonusOut: 0 }, votes: 7, down: 0 },
 ];
 
-/* ===== INVENTION DIRECTORY (reuse before AI) =====
-   Every created crop / tool / recipe is filed in a server-side directory (name, kind, normalized idea, tags, stats, image path).
-   Before a credit is spent, the idea is matched against it (exact + fuzzy: word Jaccard and character-trigram Jaccard).
-   A close match can be taken for coins: no AI call, no credit, the stored image is reused. */
-const DIRECTORY_RULES = {
-  matchMin: 0.42,                         // similarity (0..1) needed to show "Found in the Directory"
-  exact: 0.999,                           // same normalized idea
-  showMax: 3,                             // matches shown on the prompt
-  price: { crop: 15, tool: 30, recipe: 25 }, // coins to take a Directory item (OPEN QUESTION: price / royalties)
-  keepAIQuality: true,                    // a Directory crop keeps AI demand (OPEN QUESTION: vs. credit sales)
+/* ===== IMAGE LIBRARY (internal, never shown to players) =====
+   Every AI image made for any player is kept in one shared server-side library (kind, idea, name, keywords, image URL).
+   When a new crop / tool / recipe is invented, the cheap text call still runs (the player always pays 1 credit and gets
+   their own name, description and stats), but if a same-kind library entry is similar enough, its image is reused and the
+   image model is not called (~$0.04 saved). Otherwise a new image is generated and added to the library. */
+const IMAGE_LIBRARY_RULES = {
+  matchMin: 0.7,      // TUNABLE: similarity (0..1) needed to reuse a stored image instead of generating one
+  imageUsd: 0.04,     // estimated cost of one avoided image call (grok-imagine-image-2.0), for the savings log
   maxEntries: 20000,
 };
 

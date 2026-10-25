@@ -78,11 +78,10 @@ function workshopHTML() {
    <div class="think-box card ${state.onb === 1 ? 'glow-on' : ''}" data-hook="think-box">
      <div class="tb-top"><span class="tb-title">Think It!</span><span class="tb-sub">…then sell it.</span>${aiModeBadge()}</div>
      <div class="tb-types">${[['crop', '🌱 Crop'], ['tool', '🔧 Tool'], ['recipe', '🍲 Recipe']].map(([k, l]) => `<button class="tchip ${thinkType === k ? 'sel' : ''}" data-act="think-type" data-k="${k}">${l}</button>`).join('')}</div>
-     <div class="ws-slots" data-hook="ws-slots"><span class="pill ${Slots.full(thinkType) ? 'miss' : ''}">${Slots.text(thinkType)}</span>${Slots.full(thinkType) ? `<button class="link" data-act="slots-full" data-type="${thinkType}">full · manage</button>` : ''}<button class="btn sm ghost dir-btn" data-act="dir-open" data-hook="dir-open">🗂️ Directory</button></div>
+     <div class="ws-slots" data-hook="ws-slots"><span class="pill ${Slots.full(thinkType) ? 'miss' : ''}">${Slots.text(thinkType)}</span>${Slots.full(thinkType) ? `<button class="link" data-act="slots-full" data-type="${thinkType}">full · manage</button>` : ''}</div>
      <textarea class="think-ta" id="think-ta" maxlength="140" rows="2" placeholder="${ph}">${esc(thinkDraft)}</textarea>
      <div class="tb-row"><button class="btn ai big-ish ${thinkBusy ? 'disabled' : ''} ${ent.canUseAI() ? '' : 'locked'}" data-act="think-go">${thinkBusy ? '✨ Thinking…' : '✨ Think It!'} <small>(1 credit)</small></button>
        <span class="tb-cred">${ent.aiCredits} credit${ent.aiCredits === 1 ? '' : 's'}${state.ent.starterGrantGiven && ent.aiCredits > 0 && !ent.subscribed ? '<br><b>🎁 1st idea free</b>' : ''}${ent.aiCredits === 0 ? `<br><button class="link" data-act="ooc" data-hook="get-credit">Get 1 for ${Store.products.ai_credits_1.price}</button>` : ''}</span></div>
-     <p class="muted small tb-note">🗂️ Checks the Invention Directory first: a close match costs coins, not a credit.</p>
      ${aiErr && aiErr.type === thinkType ? `<p class="ai-err">⚠️ ${esc(aiErr.msg)}</p>` : ''}
    </div>
    <h3 class="sub">✨ Inspiration <small class="muted">tap to fill the box</small></h3>
@@ -108,10 +107,6 @@ async function thinkGo(btn, o = {}) {
   if (text.length < 3) { toast('Type an idea first ✏️'); ta && ta.focus(); return; }
   thinkDraft = text;
   if (Slots.full(thinkType)) { openSheet(slotsFullSheet(thinkType)); return; } // full: nothing spent, delete one first
-  if (!o.fresh && state.onb !== 1) { // (skipped for the tour's first idea, which is the free starter credit) the Invention Directory first: a close match costs coins, not a credit or an AI call
-    let m = []; try { m = await Directory.match(thinkType, text); } catch (e) { m = []; }
-    if (m.length) { Object.assign(dirState, { matchKind: thinkType, matchText: text, matches: m }); openSheet(dirMatchSheet()); return; }
-  }
   if (!Entitlements.canUseAI()) { openSheet(outOfCreditsSheet(() => thinkGo(null, { fresh: true }), text)); return; } thinkBusy = true; renderLab();
   Promise.resolve(runAI(thinkType, text, null)).then(res => { thinkBusy = false; if (res && res.ok) thinkDraft = ''; if (activeTab === 'lab') renderLab(); });
 }
@@ -530,7 +525,7 @@ function render() {
   renderCoach();
 }
 function thinkAct(a, t) {
-  if (dirAct(a, t)) return true;
+  if (slotsAct(a, t)) return true;
   switch (a) {
     case 'start': state.seenTitle = true; if (state.onb === 0) { state.onb = 1; state.onbT0 = now(); } setTab('lab'); return false; // the title button: let ui.js finish it
     case 'think-type': thinkType = t.dataset.k; { const ta = $('#think-ta'); if (ta) thinkDraft = ta.value; } renderLab(); return true;
@@ -587,4 +582,4 @@ function thinkTick() {
   renderCoach();
 }
 setInterval(thinkTick, 700);
-boot();
+// boot() is called by simple.js (loads last)

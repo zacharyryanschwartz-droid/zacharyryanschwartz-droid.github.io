@@ -343,7 +343,7 @@ function coinPop(x, amt) {
   $('.ribbon').classList.remove('bump'); void $('.ribbon').offsetWidth; $('.ribbon').classList.add('bump');
 }
 function onInterstitialDue() { // never interrupt a haggle or the first-sale tour: wait until they're over
-  const go = () => (typeof Think !== 'undefined' && (Think.haggle || [1, 2, 3, 4].includes(state.onb))) ? setTimeout(go, 1500) : Ads.showInterstitial('every ' + ECON.interstitialEverySales + ' sales');
+  const go = () => (typeof Think !== 'undefined' && (Think.haggle || [1, 2, 3, 4].includes(state.onb) || (state.ux && state.ux.guide))) ? setTimeout(go, 1500) : Ads.showInterstitial('every ' + ECON.interstitialEverySales + ' sales');
   setTimeout(go, 600); }
 
 function esc(x) { return String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
@@ -446,7 +446,7 @@ function aiModeBadge() { const b = AIBackend.badge(); return `<span class="ai-mo
 function aiNote(item) {
   const m = item && item.meta;
   if (AIBackend.mode === 'offline') return '<p class="muted small">Offline AI (demo): made from your text by the AIInterpreter stub (no network). Run server/server.js for real AI.</p>';
-  const t = m ? ` · text ${(m.ms.text / 1000).toFixed(1)}s + image ${(m.ms.image / 1000).toFixed(1)}s${m.usd && m.usd.total ? ` · ~$${m.usd.total.toFixed(3)}` : ''}` : '';
+  const t = m && m.ms ? ` · ${((m.ms.total || 0) / 1000).toFixed(1)}s` : ''; // no text/image split: image reuse stays internal
   const md = (m && m.models) || (AIBackend.info && AIBackend.info.models) || {};
   return `<p class="muted small">${AIBackend.mode === 'mock' ? `🧪 Mock AI (test): server.js → local mock of the xAI API, not real ${esc(md.text || '')} / ${esc(md.image || '')} output` : `Made by xAI via the local server: ${esc(md.text || '')} + ${esc(md.image || '')}`}${t}</p>`;
 }
@@ -730,7 +730,7 @@ function act(e) {
     case 'invent': r = Game.invent(lab.base, lab.trait, lab.stages); toast(r.ok ? `Invented ${r.inv.name}! (+2 samples)` : r.msg); renderLab(); break;
     case 'ai-locked': case 'paywall': openSheet(paywallSheet()); break;
     case 'ai-invent': // legacy: AI creation lives only in the Workshop
-      t.dataset.type = t.dataset.type || 'crop'; dirAct('th-create', t); break;
+      t.dataset.type = t.dataset.type || 'crop'; slotsAct('th-create', t); break;
     case 'ai-invent-old':
       pendingReq = null;
       if (!Entitlements.canUseAI()) { const ty = ['tool', 'recipe'].includes(t.dataset.type) ? t.dataset.type : 'crop'; openSheet(outOfCreditsSheet(() => openSheet(promptSheet(ty)))); break; }
@@ -758,7 +758,7 @@ function act(e) {
     case 'book-turn': { const ids = Object.keys(state.aiRecipes), i = (ids.indexOf(book.page) + (+t.dataset.d) + ids.length) % ids.length; book.page = ids[i]; book.fresh = false; renderBook(); break; }
     case 'req-create': {
       const R = state.aiRecipes[t.dataset.r], q = R && R.requires[+t.dataset.i]; if (!q) break;
-      dirAct('th-create', { dataset: { type: q.kind, prompt: q.idea, keepReq: '1' } });
+      slotsAct('th-create', { dataset: { type: q.kind, prompt: q.idea, keepReq: '1' } });
       pendingReq = { rid: R.id, i: +t.dataset.i, kind: q.kind, name: q.name }; promptDraft[q.kind] = q.idea; render(); break;
     }
     case 'grow': closeBook(); setTab('farm'); toast(`🌱 Plant ${t.dataset.name}, then send the harvest to the Kitchen`); break;

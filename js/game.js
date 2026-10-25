@@ -261,7 +261,7 @@ function recipeParts(R) {
 }
 /* MULTI-STEP COOKING: a learned recipe is an ordered chain of tool steps. Each step: tool, action, time (s), adds (which
    ingredients go in at that step, indexes into R.ingredients) and makes (the intermediate it hands to the next tool; the
-   last step makes the dish). Missing fields (older saves, Bazaar/Directory cards, the offline stub) get sensible defaults. */
+   last step makes the dish). Missing fields (older saves, Bazaar cards, the offline stub) get sensible defaults. */
 const STEP_MAKES = { Mix: 'dough', Knead: 'dough', Whisk: 'batter', Stir: 'batter', Chop: '(chopped)', Simmer: 'base', Boil: 'base', Fry: '(fried)', Bake: '(baked)', Grill: '(grilled)', Press: '(pressed)', Churn: 'base', Smoke: '(smoked)', Whip: 'cream', Glaze: '(glazed)' };
 function stepPlan(R) {
   const P = recipeParts(R), n = P.steps.length, ni = P.ings.length, base = Math.max(4, Math.round((R.craftTime || 12) / Math.max(1, n)));
@@ -585,7 +585,6 @@ const Game = {
     Entitlements.spendAICredit(); // interpreter + image = 1 credit, spent only on success
     state.inventions[inv.id] = inv; if (!state.order.includes(inv.id)) state.order.unshift(inv.id); state.novelty[inv.id] = 1;
     addItem('c|' + inv.id, 3); save();
-    if (typeof Directory !== 'undefined') Directory.file('crop', inv);
     return { ok: true, inv };
   },
   plotCost() { // home farm only
@@ -640,7 +639,7 @@ const Game = {
     Object.assign(t, img);
     Entitlements.spendAICredit();
     state.aiTools[t.key] = t; state.tools[t.key] = { owned: true, level: 1 }; TOOLS[t.key] = t;
-    save(); if (typeof Directory !== 'undefined') Directory.file('tool', t);
+    save();
     return { ok: true, tool: t };
   },
   /* ===== TOOL STATIONS: every tool cooks ONE batch at a time plus a small queue (ingredients are taken when queued).
@@ -722,7 +721,6 @@ const Game = {
     Object.assign(R, img);
     Entitlements.spendAICredit(); // 1 credit to LEARN; crafting afterwards is free
     state.aiRecipes[R.id] = R; state.recipeBook[R.id] = R; state.novelty[R.id] = 1; save();
-    if (typeof Directory !== 'undefined') Directory.file('recipe', R);
     return { ok: true, recipe: R };
   },
   /* ---- DELETE invented things (basics can't be deleted; never refunds credits). The global collection entry is kept. ---- */

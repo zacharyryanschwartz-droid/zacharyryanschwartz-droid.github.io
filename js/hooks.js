@@ -336,17 +336,25 @@ const AIRecipeInterpreter = {
    server generates the image, stores it, and returns a URL. The client downloads + caches it locally so the
    game stays playable offline. Image generation is included in the 1-credit cost.
    Crops: the AI only paints the FRUIT (growth stages come from the fixed preset library). Tools: full image.
-   Prototype: pre-generated art for the example ideas; anything else gets a procedural composite "preview". */
-const AIImageService = {
-  library: {
-    'a cactus that grows tiny umbrellas': MP_IMG['img/ai/umbrella-cacti.webp'],
-    'strawberries that taste like cotton candy': MP_IMG['img/ai/candy-strawberries.webp'],
-    'blue pumpkins full of snow': MP_IMG['img/ai/snow-pumpkins.webp'],
-    'a flower that sings at midnight': MP_IMG['img/ai/midnight-flowers.webp'],
-    'a cloud that rains jam': MP_IMG['img/ai/jam-cloud.webp'],
-    'a dragon oven that bakes pies': MP_IMG['img/ai/dragon-oven.webp'],
-    'umbrella cactus jam tarts with sparkle frosting': MP_IMG['img/ai/umbrella-cactus-jam-tarts.webp'],
+   Prototype (offline): the internal image library (seeded with pre-generated art) is checked first; anything else gets a
+   procedural composite "preview" (no real image is generated offline, so nothing new is added to the library). */
+/* Offline demo only: the internal image library lives in this browser (the real one is server-side, shared by all players).
+   Same rules as the server (ImageLibraryCore + IMAGE_LIBRARY_RULES.matchMin); never shown to the player. */
+const ImageLibrary = {
+  LS: 'mp_image_library',
+  db() { try { const x = JSON.parse(localStorage.getItem(this.LS)); if (x && x.v === 2 && x.items) return x; } catch (e) { /* fresh */ }
+    try { localStorage.removeItem('mp_directory'); } catch (e) { /* old player-facing Directory copy */ }
+    const db = ImageLibraryCore.newDB(); this.save(db); return db; },
+  save(db) { try { localStorage.setItem(this.LS, JSON.stringify(db)); } catch (e) { /* full */ } },
+  lastLog: null, // dev handle: MP / devtools only
+  lookup(kind, texts) {
+    const db = this.db(), m = ImageLibraryCore.match(db, kind, texts), st = ImageLibraryCore.record(db, !!m, m && m.entry); this.save(db);
+    this.lastLog = { kind, texts, hit: !!m, score: m ? m.score : (ImageLibraryCore.best(db, kind, texts) || {}).score || 0, entry: m ? m.entry.id : null, stats: { ...st } };
+    console.debug('[image library]', m ? 'HIT' : 'miss', kind, m ? `${m.entry.name} (${m.score})` : '', `hits ${st.hits} / misses ${st.misses}, saved ~$${st.savedUsd.toFixed(2)}`);
+    return m ? m.entry : null;
   },
+};
+const AIImageService = {
   fakeLatencyMs: [1200, 1800],
   imagePrompt(type, prompt, name) {
     if (type === 'recipe') return `Cozy cartoon mobile-game icon of a finished homemade dish: ${prompt}. Name: "${name}". Chunky dark-brown outlines, warm pastel palette, soft shading, served on a small plate or jar, centered, plain light background, no text.`;
@@ -358,8 +366,8 @@ const AIImageService = {
     const [a, b] = this.fakeLatencyMs, h = PromptStub.hash(PromptStub.norm(prompt));
     await new Promise(r => setTimeout(r, a + (h % (b - a))));
     const imagePrompt = this.imagePrompt(type, prompt, name);
-    const url = this.library[PromptStub.norm(prompt)];
-    if (url) return { imageUrl: url, imagePrompt, imagePreview: false };
+    const hit = ImageLibrary.lookup(type, [prompt, name]); // similar enough to an image already made? reuse it, no image call
+    if (hit) return { imageUrl: hit.imageUrl, imagePrompt, imagePreview: false };
     return { imageUrl: null, imagePrompt, imagePreview: true, accessories: accessoriesFor(prompt) };
   },
 };
